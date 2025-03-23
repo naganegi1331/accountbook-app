@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Edit = () => {
   const [expenses, setExpenses] = useState([]);
@@ -16,7 +17,7 @@ const Edit = () => {
 
   const fetchExpenses = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/expenses');
+      const res = await axios.get(`${API_URL}/api/expenses`);
       setExpenses(res.data);
     } catch (error) {
       console.error(error);
@@ -30,9 +31,9 @@ const Edit = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this item?')) return;
-
+  
     try {
-      await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+      await axios.delete(`${API_URL}/api/expenses/${id}`);
       fetchExpenses();
     } catch (error) {
       console.error(error);
@@ -70,7 +71,7 @@ const Edit = () => {
 
   const handleUpdate = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/expenses/${id}`, editForm);
+      await axios.put(`${API_URL}/api/expenses/${id}`, editForm);
       setEditingId(null);
       fetchExpenses();
       

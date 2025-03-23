@@ -18,6 +18,8 @@ import {
   CartesianGrid,
 } from 'recharts';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Graph = () => {
   const [expenses, setExpenses] = useState([]);
   const [viewType, setViewType] = useState('category'); // 'category', 'month', 'monthCategory'
@@ -40,7 +42,7 @@ const Graph = () => {
     // サーバーからデータを取得
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/expenses');
+        const res = await axios.get(`${API_URL}/api/expenses`);
         const data = res.data.map(expense => ({
           ...expense,
           // 日付文字列からYYYY-MM形式の月を抽出

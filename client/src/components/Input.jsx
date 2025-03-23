@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Input = () => {
   const navigate = useNavigate();
   const [amount, setAmount] = useState('');
@@ -131,7 +133,7 @@ const Input = () => {
     setIsSubmitting(true);
 
     try {
-      await axios.post('http://localhost:5000/api/expenses', {
+      await axios.post(`${API_URL}/api/expenses`, {
         amount: parseFloat(amount),
         category,
         memo,

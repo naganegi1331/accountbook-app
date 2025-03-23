@@ -1,5 +1,5 @@
 git add .
-git commit -m "graph improved"
+git commit -m "updated for deployment"
 git push
 
 pause

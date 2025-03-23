@@ -179,7 +179,7 @@ const Edit = () => {
               ) : (
                 // View mode
                 <>
-                  <td className="border px-4 py-2">{expense.date}</td>
+                  <td className="border px-4 py-2">{expense.date ? expense.date.substring(0, 10) : ''}</td>
                   <td className="border px-4 py-2">¥{expense.amount.toLocaleString()}</td>
                   <td className="border px-4 py-2">
                     {savedCategories.find(cat => cat.id === expense.category)?.icon || ''}{' '}

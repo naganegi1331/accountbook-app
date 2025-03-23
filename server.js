@@ -1,4 +1,4 @@
-// server.js（修正版）
+// server.js
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -49,6 +49,24 @@ app.delete('/api/expenses/:id', (req, res) => {
     }
     res.send({ message: 'Deleted successfully' });
   });
+});
+
+// 支出更新API
+app.put('/api/expenses/:id', (req, res) => {
+  const { id } = req.params;
+  const { date, amount, category, memo } = req.body;
+  
+  db.run(
+    'UPDATE expenses SET date = ?, amount = ?, category = ?, memo = ? WHERE id = ?',
+    [date, amount, category, memo, id],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send({ error: err.message });
+      }
+      res.send({ message: 'Updated successfully' });
+    }
+  );
 });
 
 // ★ 必ずすべてのルート定義の後に書くこと

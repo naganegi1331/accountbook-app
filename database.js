@@ -1,87 +1,83 @@
-// database.js - SQLiteとPostgreSQL両対応（修正版）
+// database.js - PostgreSQL設定
+const { Pool } = require('pg');
+
+// 環境変数から接続情報を取得するか、デフォルト値を使用
 const isProduction = process.env.NODE_ENV === 'production';
+const connectionString = isProduction 
+  ? process.env.DATABASE_URL 
+  : 'postgresql://postgres:1331@localhost:5432/expenses_db';
 
-let db;
+// PostgreSQLプールの設定
+const pool = new Pool({
+  connectionString,
+  ssl: isProduction ? { rejectUnauthorized: false } : false
+});
 
-if (isProduction) {
-  // PostgreSQL設定（本番環境用）
-  const { Pool } = require('pg');
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-  
-  // テーブル初期化
-  pool.query(`
-    CREATE TABLE IF NOT EXISTS expenses (
-      id SERIAL PRIMARY KEY,
-      date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      amount NUMERIC,
-      category TEXT,
-      memo TEXT
-    )
-  `).catch(err => console.error('PostgreSQL初期化エラー:', err));
-  
-  // SQLite互換APIを提供するラッパー
-  db = {
-    all: async (query, params = [], callback) => {
-      try {
-        // SQLのプレースホルダーを変換（?を$1, $2, ...に）
-        let pgQuery = query;
-        let paramCount = 0;
-        pgQuery = pgQuery.replace(/\?/g, () => `$${++paramCount}`);
-        
-        const result = await pool.query(pgQuery, params);
-        if (typeof callback === 'function') {
-          callback(null, result.rows);
-        }
-        return result.rows;
-      } catch (err) {
-        console.error('PostgreSQL query error:', err);
-        if (typeof callback === 'function') {
-          callback(err);
-        }
-        throw err;
+// テーブル初期化
+const initializeDatabase = async () => {
+  try {
+    // expenses テーブルの作成
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS expenses (
+        id SERIAL PRIMARY KEY,
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        amount NUMERIC NOT NULL,
+        category TEXT NOT NULL,
+        memo TEXT
+      )
+    `);
+    console.log('データベーステーブルの初期化が完了しました');
+  } catch (error) {
+    console.error('データベース初期化エラー:', error);
+  }
+};
+
+// 初期化を実行
+initializeDatabase();
+
+// SQLite互換APIを提供するラッパー
+const db = {
+  all: async (query, params = [], callback) => {
+    try {
+      // SQLのプレースホルダーを変換（?を$1, $2, ...に）
+      let pgQuery = query;
+      let paramCount = 0;
+      pgQuery = pgQuery.replace(/\?/g, () => `$${++paramCount}`);
+      
+      const result = await pool.query(pgQuery, params);
+      if (typeof callback === 'function') {
+        callback(null, result.rows);
       }
-    },
-    
-    run: async (query, params = [], callback) => {
-      try {
-        // SQLのプレースホルダーを変換（?を$1, $2, ...に）
-        let pgQuery = query;
-        let paramCount = 0;
-        pgQuery = pgQuery.replace(/\?/g, () => `$${++paramCount}`);
-        
-        const result = await pool.query(pgQuery, params);
-        if (typeof callback === 'function') {
-          callback(null);
-        }
-        return result;
-      } catch (err) {
-        console.error('PostgreSQL run error:', err);
-        if (typeof callback === 'function') {
-          callback(err);
-        }
-        throw err;
+      return result.rows;
+    } catch (err) {
+      console.error('PostgreSQL query error:', err);
+      if (typeof callback === 'function') {
+        callback(err);
       }
+      throw err;
     }
-  };
-} else {
-  // SQLite設定（開発環境用）
-  const sqlite3 = require('sqlite3').verbose();
-  const sqliteDb = new sqlite3.Database('./expenses.db');
+  },
   
-  sqliteDb.serialize(() => {
-    sqliteDb.run(`CREATE TABLE IF NOT EXISTS expenses (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      date TEXT DEFAULT (date('now','localtime')),
-      amount INTEGER,
-      category TEXT,
-      memo TEXT
-    )`);
-  });
-  
-  db = sqliteDb;
-}
+  run: async (query, params = [], callback) => {
+    try {
+      // SQLのプレースホルダーを変換（?を$1, $2, ...に）
+      let pgQuery = query;
+      let paramCount = 0;
+      pgQuery = pgQuery.replace(/\?/g, () => `$${++paramCount}`);
+      
+      const result = await pool.query(pgQuery, params);
+      if (typeof callback === 'function') {
+        callback(null);
+      }
+      return result;
+    } catch (err) {
+      console.error('PostgreSQL run error:', err);
+      if (typeof callback === 'function') {
+        callback(err);
+      }
+      throw err;
+    }
+  }
+};
 
 module.exports = db;

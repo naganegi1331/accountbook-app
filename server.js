@@ -1,4 +1,5 @@
 // server.js
+require('dotenv').config(); // ローカル環境変数の読み込み
 const express = require('express');
 const cors = require('cors');
 const app = express();

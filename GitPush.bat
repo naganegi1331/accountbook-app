@@ -1,5 +1,5 @@
 git add .
-git commit -m "Changed for PSQL"
+git commit -m "updated"
 git push
 
 pause

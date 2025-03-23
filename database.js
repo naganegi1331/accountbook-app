@@ -24,14 +24,12 @@ if (isProduction) {
   
   // SQLite互換APIを提供するラッパー
   db = {
-    all: async (query, params, callback) => {
+    all: async (query, params = [], callback) => {
       try {
-        // SQLiteのクエリをPostgreSQL用に調整
-        const pgQuery = query
-          .replace(/date\('now','localtime'\)/g, 'CURRENT_TIMESTAMP')
-          .replace(/ORDER BY date DESC/g, 'ORDER BY date DESC')
-          // SQLiteの?プレースホルダーを$1, $2, ...に変換
-          .replace(/\?/g, (match, index) => `$${index + 1}`);
+        // SQLのプレースホルダーを変換（?を$1, $2, ...に）
+        let pgQuery = query;
+        let paramCount = 0;
+        pgQuery = pgQuery.replace(/\?/g, () => `$${++paramCount}`);
         
         const result = await pool.query(pgQuery, params);
         if (typeof callback === 'function') {
@@ -47,13 +45,12 @@ if (isProduction) {
       }
     },
     
-    run: async (query, params, callback) => {
+    run: async (query, params = [], callback) => {
       try {
-        // SQLiteのクエリをPostgreSQL用に調整
-        const pgQuery = query
-          .replace(/date\('now','localtime'\)/g, 'CURRENT_TIMESTAMP')
-          // INSERT文の?プレースホルダーを$1, $2, ...に変換
-          .replace(/\?/g, (match, index) => `$${index + 1}`);
+        // SQLのプレースホルダーを変換（?を$1, $2, ...に）
+        let pgQuery = query;
+        let paramCount = 0;
+        pgQuery = pgQuery.replace(/\?/g, () => `$${++paramCount}`);
         
         const result = await pool.query(pgQuery, params);
         if (typeof callback === 'function') {

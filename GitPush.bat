@@ -1,5 +1,5 @@
 git add .
-git commit -m "rePush"
+git commit -m "updated for DB"
 git push
 
 pause

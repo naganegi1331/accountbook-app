@@ -1,4 +1,4 @@
-// database.js - SQLiteとPostgreSQL両対応
+// database.js - SQLiteとPostgreSQL両対応（修正版）
 const isProduction = process.env.NODE_ENV === 'production';
 
 let db;
@@ -16,7 +16,7 @@ if (isProduction) {
     CREATE TABLE IF NOT EXISTS expenses (
       id SERIAL PRIMARY KEY,
       date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      amount INTEGER,
+      amount NUMERIC,
       category TEXT,
       memo TEXT
     )
@@ -29,13 +29,21 @@ if (isProduction) {
         // SQLiteのクエリをPostgreSQL用に調整
         const pgQuery = query
           .replace(/date\('now','localtime'\)/g, 'CURRENT_TIMESTAMP')
-          .replace(/ORDER BY date DESC/g, 'ORDER BY date DESC');
+          .replace(/ORDER BY date DESC/g, 'ORDER BY date DESC')
+          // SQLiteの?プレースホルダーを$1, $2, ...に変換
+          .replace(/\?/g, (match, index) => `$${index + 1}`);
         
         const result = await pool.query(pgQuery, params);
-        callback(null, result.rows);
+        if (typeof callback === 'function') {
+          callback(null, result.rows);
+        }
+        return result.rows;
       } catch (err) {
         console.error('PostgreSQL query error:', err);
-        callback(err);
+        if (typeof callback === 'function') {
+          callback(err);
+        }
+        throw err;
       }
     },
     
@@ -43,13 +51,21 @@ if (isProduction) {
       try {
         // SQLiteのクエリをPostgreSQL用に調整
         const pgQuery = query
-          .replace(/date\('now','localtime'\)/g, 'CURRENT_TIMESTAMP');
+          .replace(/date\('now','localtime'\)/g, 'CURRENT_TIMESTAMP')
+          // INSERT文の?プレースホルダーを$1, $2, ...に変換
+          .replace(/\?/g, (match, index) => `$${index + 1}`);
         
-        await pool.query(pgQuery, params);
-        callback && callback(null);
+        const result = await pool.query(pgQuery, params);
+        if (typeof callback === 'function') {
+          callback(null);
+        }
+        return result;
       } catch (err) {
         console.error('PostgreSQL run error:', err);
-        callback && callback(err);
+        if (typeof callback === 'function') {
+          callback(err);
+        }
+        throw err;
       }
     }
   };

@@ -22,8 +22,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Graph = () => {
   const [expenses, setExpenses] = useState([]);
-  const [viewType, setViewType] = useState('category'); // 'category', 'month', 'monthCategory'
-  const [chartType, setChartType] = useState('bar'); // 'bar', 'pie', 'line'
+  const [viewType, setViewType] = useState('monthCategory'); // 'category', 'month', 'monthCategory'
+  const [chartType, setChartType] = useState('stacked'); // 'bar', 'pie', 'line'
   const [selectedMonth, setSelectedMonth] = useState('all'); // 'all' or specific month (YYYY-MM)
   const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' or specific category
   const [processedData, setProcessedData] = useState([]);
@@ -206,6 +206,8 @@ const Graph = () => {
     switch (chartType) {
       case 'bar':
         return renderBarChart();
+      case 'stacked':
+        return renderStackedBarChart();
       case 'pie':
         return renderPieChart();
       case 'line':
@@ -250,7 +252,7 @@ const Graph = () => {
       );
     }
     
-    // 月+カテゴリのクロス集計グラフ
+    // 月+カテゴリのクロス集計グラフ（グループ化された棒グラフ）
     const dataKeys = processedData.length > 0
       ? Object.keys(processedData[0]).filter(key => key !== 'name')
       : [];
@@ -271,7 +273,56 @@ const Graph = () => {
               key={key}
               dataKey={key}
               fill={COLORS[index % COLORS.length]}
-              stackId={selectedCategory !== 'all' ? 'a' : undefined}
+              radius={[4, 4, 0, 0]}
+            />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  // 積み上げ棒グラフの描画 (新規追加)
+  const renderStackedBarChart = () => {
+    // カテゴリ別では積み上げ棒グラフを表示できない
+    if (viewType === 'category') {
+      return (
+        <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
+          <p className="text-gray-500">カテゴリ別では積み上げ棒グラフを表示できません。別の表示タイプを選択してください。</p>
+        </div>
+      );
+    }
+    
+    // 月別の単純な棒グラフの場合、通常の棒グラフと同じになるので警告を表示
+    if (viewType === 'month') {
+      return (
+        <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
+          <p className="text-gray-500">月別では「月別×カテゴリ別」を選択すると積み上げ棒グラフが表示できます</p>
+        </div>
+      );
+    }
+    
+    // 月+カテゴリのクロス集計グラフ（積み上げ棒グラフ）
+    const dataKeys = processedData.length > 0
+      ? Object.keys(processedData[0]).filter(key => key !== 'name')
+      : [];
+
+    return (
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart
+          data={processedData}
+          margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
+          <YAxis tickFormatter={formatCurrency} />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          {dataKeys.map((key, index) => (
+            <Bar
+              key={key}
+              dataKey={key}
+              stackId="a"
+              fill={COLORS[index % COLORS.length]}
               radius={[4, 4, 0, 0]}
             />
           ))}
@@ -415,6 +466,7 @@ const Graph = () => {
               onChange={(e) => setChartType(e.target.value)}
             >
               <option value="bar">棒グラフ</option>
+              <option value="stacked">積み上げ棒グラフ</option>
               <option value="pie">円グラフ</option>
               <option value="line">折れ線グラフ</option>
             </select>
@@ -469,10 +521,10 @@ const Graph = () => {
                   // monthCategory の場合は、カテゴリ名のプロパティ値を合計
                   const categoryValues = Object.entries(item)
                     .filter(([key]) => key !== 'name')
-                    .reduce((catSum, [, value]) => catSum + value, 0);
+                    .reduce((catSum, [, value]) => catSum + Number(value), 0);
                   return sum + categoryValues;
                 }
-                return sum + item.value;
+                return sum + Number(item.value);
               }, 0))}
             </p>
           </div>
@@ -493,10 +545,10 @@ const Graph = () => {
                     // monthCategory の場合は、カテゴリ名のプロパティ値を合計
                     const categoryValues = Object.entries(item)
                       .filter(([key]) => key !== 'name')
-                      .reduce((catSum, [, value]) => catSum + value, 0);
+                      .reduce((catSum, [, value]) => catSum + Number(value), 0);
                     return sum + categoryValues;
                   }
-                  return sum + item.value;
+                  return sum + Number(item.value);
                 }, 0) / (viewType === 'monthCategory' ? Math.max(1, processedData.length) : Math.max(1, processedData.length))
               )}
             </p>

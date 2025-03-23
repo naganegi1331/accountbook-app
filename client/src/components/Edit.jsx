@@ -1,9 +1,11 @@
 // src/components/Edit.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Edit = () => {
   const [expenses, setExpenses] = useState([]);
+  const navigate = useNavigate();
 
   const fetchExpenses = async () => {
     try {
@@ -63,8 +65,24 @@ const Edit = () => {
           ))}
         </tbody>
       </table>
+
+      <div className="mt-6 flex justify-center gap-4">
+        <button
+          onClick={() => navigate('/')}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+        >
+          支出を追加する
+        </button>
+        <button
+          onClick={() => navigate('/graph')}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+        >
+          グラフを見る
+        </button>
+      </div>
     </div>
   );
 };
 
 export default Edit;
+

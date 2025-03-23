@@ -1,5 +1,5 @@
 git add .
-git commit -m "test"
+git commit -m "graph improved"
 git push
 
 pause

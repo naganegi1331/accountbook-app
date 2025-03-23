@@ -1,5 +1,5 @@
 git add .
-git commit -m "updated for deployment"
+git commit -m "rePush"
 git push
 
 pause

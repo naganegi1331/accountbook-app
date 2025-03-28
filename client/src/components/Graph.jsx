@@ -521,10 +521,10 @@ const Graph = () => {
                   // monthCategory の場合は、カテゴリ名のプロパティ値を合計
                   const categoryValues = Object.entries(item)
                     .filter(([key]) => key !== 'name')
-                    .reduce((catSum, [, value]) => catSum + Number(value), 0);
+                    .reduce((catSum, [, value]) => catSum + parseFloat(value || 0), 0);
                   return sum + categoryValues;
                 }
-                return sum + Number(item.value);
+                return sum + parseFloat(item.value || 0);
               }, 0))}
             </p>
           </div>
@@ -545,7 +545,7 @@ const Graph = () => {
                     // monthCategory の場合は、カテゴリ名のプロパティ値を合計
                     const categoryValues = Object.entries(item)
                       .filter(([key]) => key !== 'name')
-                      .reduce((catSum, [, value]) => catSum + Number(value), 0);
+                      .reduce((catSum, [, value]) => catSum + parseFloat(value || 0), 0);
                     return sum + categoryValues;
                   }
                   return sum + Number(item.value);
